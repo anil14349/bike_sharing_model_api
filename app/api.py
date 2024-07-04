@@ -34,9 +34,6 @@ def health() -> dict:
 
 @api_router.post("/predict", response_model=schemas.PredictionResults, status_code=200)
 async def predict(input_data: schemas.MultipleDataInputs) -> Any:
-    """
-    Survival predictions with the titanic_model
-    """
 
     input_df = pd.DataFrame(jsonable_encoder(input_data.inputs))
     

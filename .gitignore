@@ -1,0 +1,7 @@
+.DS_Store
+app/__pycache__/__init__.cpython-311.pyc
+app/__pycache__/api.cpython-311.pyc
+app/__pycache__/config.cpython-311.pyc
+app/schemas/__pycache__/__init__.cpython-311.pyc
+app/schemas/__pycache__/health.cpython-311.pyc
+app/schemas/__pycache__/predict.cpython-311.pyc
