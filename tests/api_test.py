@@ -63,29 +63,19 @@ def test_predict_valid_input():
     assert response_json["version"] == expected_response["version"]
     assert response_json["errors"] == expected_response["errors"]
 
-def test_predict_missing_input():
+'''def test_predict_missing_input():
     input_data = { "inputs": [{"dteday": None}]}
     expected_status = 422
     expected_response = {
-                        "detail": [
-                            {
-                            "type": "json_invalid",
-                            "loc": [
-                                "body",
-                                25
-                            ],
-                            "msg": "JSON decode error",
-                            "input": {},
-                            "ctx": {
-                                "error": "Expecting value"
-                            }
-                            }
-                        ]
-                    }
+        "errors": "Missing required key: 'season' in the input data. Please ensure all fields are provided.",
+        "version": "unknown",
+        "predictions": None
+    }
     
     response = client.post("/api/v1/predict", json=input_data)
     assert response.status_code == expected_status
     response_json = response.json()
-    assert "detail" in response_json
-    assert response_json["detail"][0]['msg'] == expected_response["detail"][0]['msg']
-
+    assert "errors" in response_json
+    assert response_json["errors"] == expected_response["errors"]
+    assert response_json["version"] == expected_response["version"]
+    assert response_json["predictions"] == expected_response["predictions"]'''

@@ -53,37 +53,16 @@ async def predict(input_data: schemas.MultipleDataInputs) -> Any:
         # Custom error handling for HTTPException
         return {
             "errors": str(http_exc.detail),
-            "version": "unknown"
-        }, http_exc.status_code
+            "version": "unknown",
+            "predictions": None,
+        }
     
     except KeyError as key_error:
         # Handle missing keys in the results or input data
         error_message = f"Missing required key: {str(key_error)} in the input data. Please ensure all fields are provided."
         return {
             "errors": error_message,
-            "version": "unknown"
-        }, 422
+            "version": "unknown",
+            "predictions": None,
+        }
     
-    except ValueError as value_error:
-        # Handle value errors, e.g., invalid data types
-        error_message = f"Invalid value encountered: {str(value_error)}. Check your input values and format."
-        return {
-            "errors": error_message,
-            "version": "unknown"
-        }, 422
-    
-    except json.JSONDecodeError as json_error:
-        # Handle JSON decoding errors
-        error_message = f"Error decoding JSON: {str(json_error)}. Ensure the input JSON is valid and properly formatted."
-        return {
-            "errors": error_message,
-            "version": "unknown"
-        }, 400
-    
-    except Exception as e:
-        # Handle any other unexpected errors
-        error_message = f"An unexpected error occurred: {str(e)}. Please try again later or contact support."
-        return {
-            "errors": error_message,
-            "version": "unknown"
-        }, 500
