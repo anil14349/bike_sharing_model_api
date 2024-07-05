@@ -34,12 +34,56 @@ def health() -> dict:
 
 @api_router.post("/predict", response_model=schemas.PredictionResults, status_code=200)
 async def predict(input_data: schemas.MultipleDataInputs) -> Any:
+    try:
+        
+        input_df = pd.DataFrame(jsonable_encoder(input_data.inputs))
+        results = make_prediction(input_data=input_df.replace({np.nan: None}))
 
-    input_df = pd.DataFrame(jsonable_encoder(input_data.inputs))
+        if results["errors"] is not None:
+            raise HTTPException(status_code=400, detail=json.loads(results["errors"]))
+        
+        predictions = results["predictions"].item() if isinstance(results["predictions"], np.ndarray) else results["predictions"]
+        return {
+            "predictions": predictions,
+            "version": results['version'],
+            "errors": results["errors"]
+        }
     
-    results = make_prediction(input_data=input_df.replace({np.nan: None}))
-
-    if results["errors"] is not None:
-        raise HTTPException(status_code=400, detail=json.loads(results["errors"]))
-
-    return results
+    except HTTPException as http_exc:
+        # Custom error handling for HTTPException
+        return {
+            "errors": str(http_exc.detail),
+            "version": "unknown"
+        }, http_exc.status_code
+    
+    except KeyError as key_error:
+        # Handle missing keys in the results or input data
+        error_message = f"Missing required key: {str(key_error)} in the input data. Please ensure all fields are provided."
+        return {
+            "errors": error_message,
+            "version": "unknown"
+        }, 422
+    
+    except ValueError as value_error:
+        # Handle value errors, e.g., invalid data types
+        error_message = f"Invalid value encountered: {str(value_error)}. Check your input values and format."
+        return {
+            "errors": error_message,
+            "version": "unknown"
+        }, 422
+    
+    except json.JSONDecodeError as json_error:
+        # Handle JSON decoding errors
+        error_message = f"Error decoding JSON: {str(json_error)}. Ensure the input JSON is valid and properly formatted."
+        return {
+            "errors": error_message,
+            "version": "unknown"
+        }, 400
+    
+    except Exception as e:
+        # Handle any other unexpected errors
+        error_message = f"An unexpected error occurred: {str(e)}. Please try again later or contact support."
+        return {
+            "errors": error_message,
+            "version": "unknown"
+        }, 500

@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import numpy as np
 import importlib.util
 import pytest
 from fastapi.testclient import TestClient
@@ -26,48 +27,65 @@ def test_health():
     assert "name" in response.json()
     assert "api_version" in response.json()
     assert "model_version" in response.json()
-
-@pytest.mark.parametrize("input_data, expected_status, expected_response", [
-    (
-        {"inputs": [{"dteday" : "2012-11-05",
-                    "season": "winter",
-                    "hr": "6am",
-                    "holiday": "No",
-                    "weekday": "Mon",
-                    "workingday": "Yes",
-                    "weathersit": "Mist",
-                    "temp": 6.1,
-                    "atemp": 3.0014,
-                    "hum": 49.0,
-                    "windspeed": 19.0012,
-                    "casual": 4,
-                    "registered": 135}]},
-        200,
-        {"predictions": [86.24635745], "version": "0.0.1", "errors": None} 
-    ),
-    (
-        {"inputs": [{"dteday": "2012-11-05", "season": "winter", "hr": "6am", "holiday": "No", "weekday": "Mon", "workingday": "Yes", "weathersit": "Mist", "temp": 6.1, "atemp": 3.0014, "hum": 49.0, "windspeed": 19.0012, "casual": 4, "registered": 135}]},
-        400,
-        {"error": "Invalid input"}
-    ),
-    (
-        {},
-        422,
-        {"error": "Invalid request"}
-    ),
-])
-
-
-def test_predict(input_data, expected_status, expected_response):
+    
+def test_predict_valid_input():
+    input_data = {
+        "inputs": [
+            {
+                "dteday": "2012-11-05",
+                "season": "winter",
+                "hr": "6am",
+                "holiday": "No",
+                "weekday": "Mon",
+                "workingday": "Yes",
+                "weathersit": "Mist",
+                "temp": 6.1,
+                "atemp": 3.0014,
+                "hum": 49.0,
+                "windspeed": 19.0012,
+                "casual": 4,
+                "registered": 135
+            }
+        ]
+    }
+    expected_status = 200
+    expected_response = {
+        "errors": None,
+        "version": "0.0.1",
+        "predictions":  86.24635745
+    }
+    
     response = client.post("/api/v1/predict", json=input_data)
     assert response.status_code == expected_status
-    print('#######################',response.json())
-    assert response.json()["predictions"] == pytest.approx(expected_response["predictions"], rel=1e-2)
-    assert response.json()["version"] == expected_response["version"]
-    assert response.json()["errors"] == expected_response["errors"]
+    response_json = response.json()
+    assert "predictions" in response_json
+    assert response_json["predictions"] == pytest.approx(expected_response["predictions"], rel=1e-2)
+    assert response_json["version"] == expected_response["version"]
+    assert response_json["errors"] == expected_response["errors"]
+
+def test_predict_missing_input():
+    input_data = { "inputs": [{"dteday": None}]}
+    expected_status = 422
+    expected_response = {
+                        "detail": [
+                            {
+                            "type": "json_invalid",
+                            "loc": [
+                                "body",
+                                25
+                            ],
+                            "msg": "JSON decode error",
+                            "input": {},
+                            "ctx": {
+                                "error": "Expecting value"
+                            }
+                            }
+                        ]
+                    }
     
-    '''def test_predict(input_data, expected_status, expected_response):
-    response = client.post("/api/v1/predict", json=input_data) 
-    print('#################',response.json())
+    response = client.post("/api/v1/predict", json=input_data)
     assert response.status_code == expected_status
-    #assert response.json() == expected_response'''
+    response_json = response.json()
+    assert "detail" in response_json
+    assert response_json["detail"][0]['msg'] == expected_response["detail"][0]['msg']
+
