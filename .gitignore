@@ -5,3 +5,5 @@ app/__pycache__/config.cpython-311.pyc
 app/schemas/__pycache__/__init__.cpython-311.pyc
 app/schemas/__pycache__/health.cpython-311.pyc
 app/schemas/__pycache__/predict.cpython-311.pyc
+tests/__pycache__/api_test.cpython-311-pytest-7.4.4.pyc
+app/__pycache__/main.cpython-311.pyc
